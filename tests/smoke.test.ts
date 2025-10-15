@@ -164,3 +164,64 @@ for (const file of exampleFiles.filter((f) => f.includes("inspect"))) {
 //         server.kill("SIGKILL")
 //     }
 // })
+
+// Test prompts/get with arguments - this is critical for real-world usage
+test("inspector can call prompts/get with args on prompt.review.ts", async () => {
+    const examplePath = join(examplesDir, "prompt.review.ts")
+    const { code, stdout, stderr } = await runWithTimeout(
+        "bun",
+        [
+            "x",
+            "@modelcontextprotocol/inspector",
+            "--cli",
+            "bun",
+            examplePath,
+            "--method",
+            "prompts/get",
+            "--prompt-name",
+            "review-code",
+            "--prompt-args",
+            "subject=console.log('hi')",
+        ],
+        7000,
+    )
+    if (stdout) console.log(`Inspector stdout:\n${stdout}`)
+    if (stderr) console.log(`Inspector stderr:\n${stderr}`)
+    if (code !== 0) {
+        throw new Error(`inspector prompts/get failed with code ${code}:\n${stderr}`)
+    }
+    expect(code).toBe(0)
+    expect(stdout).toContain("Please review this code")
+    expect(stdout).toContain("console.log('hi')")
+})
+
+// Test tools/call with arguments
+test("inspector can call tools/call on tool.minimal.ts", async () => {
+    const examplePath = join(examplesDir, "tool.minimal.ts")
+    const { code, stdout, stderr } = await runWithTimeout(
+        "bun",
+        [
+            "x",
+            "@modelcontextprotocol/inspector",
+            "--cli",
+            "bun",
+            examplePath,
+            "--method",
+            "tools/call",
+            "--tool-name",
+            "add",
+            "--tool-arg",
+            "a=5",
+            "--tool-arg",
+            "b=3",
+        ],
+        7000,
+    )
+    if (stdout) console.log(`Inspector stdout:\n${stdout}`)
+    if (stderr) console.log(`Inspector stderr:\n${stderr}`)
+    if (code !== 0) {
+        throw new Error(`inspector tools/call failed with code ${code}:\n${stderr}`)
+    }
+    expect(code).toBe(0)
+    expect(stdout).toContain("5 + 3 = 8")
+})

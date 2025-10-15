@@ -53,20 +53,20 @@ import { z } from "zod"
 import { registerTool, startServer } from "mcpez"
 
 registerTool(
-  "add",
-  {
-    description: "Add two numbers",
-    inputSchema: {
-      a: z.number(),
-      b: z.number(),
+    "add",
+    {
+        description: "Add two numbers",
+        inputSchema: {
+            a: z.number(),
+            b: z.number(),
+        },
     },
-  },
-  async ({ a, b }) => {
-    const result = a + b
-    return {
-      content: [{ type: "text", text: `${a} + ${b} = ${result}` }],
-    }
-  },
+    async ({ a, b }) => {
+        const result = a + b
+        return {
+            content: [{ type: "text", text: `${a} + ${b} = ${result}` }],
+        }
+    },
 )
 
 await startServer()
@@ -80,20 +80,20 @@ await startServer()
 import { registerResource, startServer } from "mcpez"
 
 registerResource(
-  "config",
-  "config://app",
-  {
-    description: "Application configuration data",
-    mimeType: "text/plain",
-  },
-  async (uri) => ({
-    contents: [
-      {
-        uri: uri.href,
-        text: "App configuration here",
-      },
-    ],
-  }),
+    "config",
+    "config://app",
+    {
+        description: "Application configuration data",
+        mimeType: "text/plain",
+    },
+    async (uri) => ({
+        contents: [
+            {
+                uri: uri.href,
+                text: "App configuration here",
+            },
+        ],
+    }),
 )
 
 await startServer()
@@ -108,52 +108,52 @@ import { z } from "zod"
 import { registerPrompt, registerTool, registerResource, startServer } from "mcpez"
 
 registerTool(
-  "echo",
-  {
-    description: "Echoes back the provided message",
-    inputSchema: { message: z.string() },
-  },
-  async ({ message }) => {
-    const output = { echo: `Tool echo: ${message}` }
-    return {
-      content: [{ type: "text", text: JSON.stringify(output) }],
-    }
-  },
+    "echo",
+    {
+        description: "Echoes back the provided message",
+        inputSchema: { message: z.string() },
+    },
+    async ({ message }) => {
+        const output = { echo: `Tool echo: ${message}` }
+        return {
+            content: [{ type: "text", text: JSON.stringify(output) }],
+        }
+    },
 )
 
 registerResource(
-  "echo",
-  "echo://message",
-  {
-    description: "Echoes back messages as resources",
-  },
-  async (uri) => ({
-    contents: [
-      {
-        uri: uri.href,
-        text: `Resource echo: Hello!`,
-      },
-    ],
-  }),
+    "echo",
+    "echo://message",
+    {
+        description: "Echoes back messages as resources",
+    },
+    async (uri) => ({
+        contents: [
+            {
+                uri: uri.href,
+                text: `Resource echo: Hello!`,
+            },
+        ],
+    }),
 )
 
 registerPrompt(
-  "echo",
-  {
-    description: "Creates a prompt to process a message",
-    argsSchema: { message: z.string() },
-  },
-  ({ message }) => ({
-    messages: [
-      {
-        role: "user",
-        content: {
-          type: "text",
-          text: `Please process this message: ${message}`,
-        },
-      },
-    ],
-  }),
+    "echo",
+    {
+        description: "Creates a prompt to process a message",
+        argsSchema: { message: z.string() },
+    },
+    ({ message }) => ({
+        messages: [
+            {
+                role: "user",
+                content: {
+                    type: "text",
+                    text: `Please process this message: ${message}`,
+                },
+            },
+        ],
+    }),
 )
 
 // Start with custom server name and version
