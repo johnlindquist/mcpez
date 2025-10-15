@@ -18,7 +18,7 @@ registerPrompt(
   "generate_content",
   {
     description: "Generate helpful content based on a topic",
-    argsSchema: z.object({ topic: z.string().describe("Topic") }),
+    argsSchema: { topic: z.string().describe("Topic") },
   },
   async ({ topic }) => ({
     messages: [
