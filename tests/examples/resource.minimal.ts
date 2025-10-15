@@ -2,11 +2,17 @@ import { registerResource, startServer } from "../../src/index"
 
 registerResource(
     "config",
-    "file:///config.json",
-    { mimeType: "application/json" },
-    async () => ({
+    "config://app",
+    {
+        description: "Application configuration data",
+        mimeType: "text/plain",
+    },
+    async (uri) => ({
         contents: [
-            { uri: "file:///config.json", mimeType: "application/json", text: '{"setting": "value"}' },
+            {
+                uri: uri.href,
+                text: "App configuration here",
+            },
         ],
     }),
 )

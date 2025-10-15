@@ -2,13 +2,23 @@ import { z } from "zod"
 import { registerPrompt, startServer } from "../../src/index"
 
 registerPrompt(
-  "generate_content",
+  "review-code",
   {
-    description: "Generate helpful content based on a topic",
-    argsSchema: { topic: z.string().describe("Topic") },
+    description: "Review code for best practices and potential issues",
+    argsSchema: {
+      code: z.string(),
+    },
   },
-  async ({ topic }) => ({
-    messages: [{ role: "user", content: { type: "text", text: `Write a poem about ${topic}` } }],
+  ({ code }) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Please review this code:\n\n${code}`,
+        },
+      },
+    ],
   }),
 )
 

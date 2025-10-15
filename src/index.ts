@@ -27,7 +27,7 @@ export type PromptHandler = RegisterPromptParams[2]
 
 // Loosen Zod typing to support both Zod v3 and v4 without type identity issues
 export type RegisterPromptOptions = Omit<SDKRegisterPromptOptions, "argsSchema"> & {
-    argsSchema: Record<string, unknown>
+    argsSchema: Record<string, unknown> | unknown
 }
 
 type RegisterToolParams = Parameters<typeof McpServer.prototype.registerTool>
@@ -36,8 +36,8 @@ export type ToolHandler = RegisterToolParams[2]
 
 // Loosen Zod typing for tool schemas as well
 export type ToolOptions = Omit<SDKToolOptions, "inputSchema" | "outputSchema"> & {
-    inputSchema?: Record<string, unknown>
-    outputSchema?: Record<string, unknown>
+    inputSchema?: Record<string, unknown> | unknown
+    outputSchema?: Record<string, unknown> | unknown
 }
 
 export type ResourceOptions = ResourceMetadata

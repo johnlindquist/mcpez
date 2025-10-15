@@ -50,8 +50,5 @@ registerPrompt(
     }),
 )
 
-// Start with custom server name and version
-await startServer("example-full-server", { version: "1.0.0" })
-
-// Immediately exit after connect to avoid hanging in tests
-process.exit(0)
+// Start the server
+await startServer("example-echo-server", { version: "1.0.0" })

@@ -21,13 +21,23 @@ import { z } from "zod"
 import { registerPrompt, startServer } from "mcpez"
 
 registerPrompt(
-  "generate_content",
+  "review-code",
   {
-    description: "Generate helpful content based on a topic",
-    argsSchema: { topic: z.string().describe("Topic") },
+    description: "Review code for best practices and potential issues",
+    argsSchema: {
+      code: z.string(),
+    },
   },
-  async ({ topic }) => ({
-    messages: [{ role: "user", content: { type: "text", text: `Write a poem about ${topic}` } }],
+  ({ code }) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Please review this code:\n\n${code}`,
+        },
+      },
+    ],
   }),
 )
 
@@ -43,19 +53,20 @@ import { z } from "zod"
 import { registerTool, startServer } from "mcpez"
 
 registerTool(
-    "get_time",
-    {
-        description: "Get the current time",
-        inputSchema: { format: z.enum(["iso", "unix"]).optional() },
+  "add",
+  {
+    description: "Add two numbers",
+    inputSchema: {
+      a: z.number(),
+      b: z.number(),
     },
-    async ({ format }) => {
-        const time = new Date()
-        return {
-            content: [
-                { type: "text", text: format === "unix" ? time.getTime().toString() : time.toISOString() },
-            ],
-        }
-    },
+  },
+  async ({ a, b }) => {
+    const result = a + b
+    return {
+      content: [{ type: "text", text: `${a} + ${b} = ${result}` }],
+    }
+  },
 )
 
 await startServer()
@@ -69,14 +80,20 @@ await startServer()
 import { registerResource, startServer } from "mcpez"
 
 registerResource(
-    "config",
-    "file:///config.json",
-    { mimeType: "application/json" },
-    async () => ({
-        contents: [
-            { uri: "file:///config.json", mimeType: "application/json", text: '{"setting": "value"}' },
-        ],
-    }),
+  "config",
+  "config://app",
+  {
+    description: "Application configuration data",
+    mimeType: "text/plain",
+  },
+  async (uri) => ({
+    contents: [
+      {
+        uri: uri.href,
+        text: "App configuration here",
+      },
+    ],
+  }),
 )
 
 await startServer()
@@ -90,47 +107,53 @@ await startServer()
 import { z } from "zod"
 import { registerPrompt, registerTool, registerResource, startServer } from "mcpez"
 
-// Register a prompt
-registerPrompt(
-    "generate_content",
-    {
-        description: "Generate helpful content based on a topic",
-        argsSchema: { topic: z.string().describe("Topic") },
-    },
-    async ({ topic }) => ({
-        messages: [
-            { role: "user", content: { type: "text", text: `Write a poem about ${topic}` } },
-        ],
-    }),
-)
-
-// Register a tool
 registerTool(
-    "get_time",
-    {
-        description: "Get the current time",
-        inputSchema: { format: z.enum(["iso", "unix"]).optional() },
-    },
-    async ({ format }) => {
-        const time = new Date()
-        return {
-            content: [
-                { type: "text", text: format === "unix" ? time.getTime().toString() : time.toISOString() },
-            ],
-        }
-    },
+  "echo",
+  {
+    description: "Echoes back the provided message",
+    inputSchema: { message: z.string() },
+  },
+  async ({ message }) => {
+    const output = { echo: `Tool echo: ${message}` }
+    return {
+      content: [{ type: "text", text: JSON.stringify(output) }],
+    }
+  },
 )
 
-// Register a resource
 registerResource(
-    "config",
-    "file:///config.json",
-    { mimeType: "application/json" },
-    async () => ({
-        contents: [
-            { uri: "file:///config.json", mimeType: "application/json", text: '{"setting": "value"}' },
-        ],
-    }),
+  "echo",
+  "echo://message",
+  {
+    description: "Echoes back messages as resources",
+  },
+  async (uri) => ({
+    contents: [
+      {
+        uri: uri.href,
+        text: `Resource echo: Hello!`,
+      },
+    ],
+  }),
+)
+
+registerPrompt(
+  "echo",
+  {
+    description: "Creates a prompt to process a message",
+    argsSchema: { message: z.string() },
+  },
+  ({ message }) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Please process this message: ${message}`,
+        },
+      },
+    ],
+  }),
 )
 
 // Start with custom server name and version

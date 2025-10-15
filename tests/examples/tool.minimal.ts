@@ -2,17 +2,18 @@ import { z } from "zod"
 import { registerTool, startServer } from "../../src/index"
 
 registerTool(
-    "get_time",
+    "add",
     {
-        description: "Get the current time",
-        inputSchema: { format: z.enum(["iso", "unix"]).optional() },
+        description: "Add two numbers",
+        inputSchema: {
+            a: z.number(),
+            b: z.number(),
+        },
     },
-    async ({ format }) => {
-        const time = new Date()
+    async ({ a, b }) => {
+        const result = a + b
         return {
-            content: [
-                { type: "text", text: format === "unix" ? time.getTime().toString() : time.toISOString() },
-            ],
+            content: [{ type: "text", text: `${a} + ${b} = ${result}` }],
         }
     },
 )
