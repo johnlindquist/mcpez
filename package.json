@@ -17,9 +17,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && bun run sync-readme",
     "dev": "bun run build --watch",
-    "test": "bun test",
+    "test": "bun run check-zod-version && bun test",
+    "check-zod-version": "bun scripts/check-zod-version.ts",
     "sync-readme": "bun scripts/sync-readme.ts",
-    "prepublishOnly": "bun run build",
+    "prepublishOnly": "bun run check-zod-version && bun run build",
     "lint": "biome lint .",
     "format": "biome format .",
     "format:write": "biome format . --write",
@@ -27,10 +28,14 @@
     "fix:unsafe": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.20.0"
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "zod": "^3.23.8"
   },
-  "peerDependencies": {
-    "zod": "^3.23.0"
+  "resolutions": {
+    "zod": "^3.23.8"
+  },
+  "overrides": {
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.6",
@@ -41,7 +46,6 @@
     "@semantic-release/release-notes-generator": "^14.0.1",
     "@types/node": "^20.11.30",
     "bun-types": "^1.3.0",
-    "zod": "^3.23.8",
     "semantic-release": "^24.0.0",
     "typescript": "^5.6.3"
   },

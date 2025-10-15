@@ -5,7 +5,24 @@ Minimal, ergonomic ESM wrapper for building MCP servers with TypeScript and Bun.
 ## Install
 
 ```bash
-bun add mcpez zod
+# bun
+bun add mcpez
+
+# npm
+npm install mcpez
+
+# pnpm
+pnpm add mcpez
+```
+
+Zod is bundled with mcpez, so you don't need to install it separately.
+
+## Why Zod is Bundled
+
+mcpez bundles Zod v3 to ensure compatibility with the MCP SDK, which requires Zod v3 specifically. Since Zod v4 has breaking changes that cause runtime errors like `keyValidator._parse is not a function`, bundling Zod v3 prevents version conflicts and provides a simpler, error-free developer experience. You can import `z` directly from mcpez:
+
+```ts
+import { z, registerPrompt, startServer } from "mcpez"
 ```
 
 ## Quickstart
@@ -17,8 +34,7 @@ bun add mcpez zod
 <!-- Source: tests/examples/prompt.poem.ts -->
 
 ```ts
-import { z } from "zod"
-import { registerPrompt, startServer } from "mcpez"
+import { z, registerPrompt, startServer } from "mcpez"
 
 registerPrompt(
   "review-code",
@@ -49,8 +65,7 @@ await startServer()
 <!-- Source: tests/examples/tool.minimal.ts -->
 
 ```ts
-import { z } from "zod"
-import { registerTool, startServer } from "mcpez"
+import { z, registerTool, startServer } from "mcpez"
 
 registerTool(
     "add",
@@ -104,8 +119,7 @@ await startServer()
 <!-- Source: tests/examples/full.server.ts -->
 
 ```ts
-import { z } from "zod"
-import { registerPrompt, registerTool, registerResource, startServer } from "mcpez"
+import { z, registerPrompt, registerTool, registerResource, startServer } from "mcpez"
 
 registerTool(
     "echo",

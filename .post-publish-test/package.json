@@ -1,0 +1,9 @@
+{
+  "name": "mcpez-post-publish-test",
+  "version": "1.0.0",
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "latest"
+  },
+  "private": true,
+  "type": "module"
+}

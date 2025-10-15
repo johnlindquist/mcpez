@@ -19,6 +19,9 @@ import {
 export type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 export type { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
+// Re-export Zod so users don't need to install it separately
+export { z } from "zod"
+
 // Narrowed option types, deferring to SDK types where appropriate
 // Derive exact parameter types from the SDK methods
 type RegisterPromptParams = Parameters<typeof McpServer.prototype.registerPrompt>

@@ -1,5 +1,4 @@
-import { z } from "zod"
-import { registerTool, startServer } from "../../src/index"
+import { z, registerTool, startServer } from "../../src/index"
 
 registerTool(
     "add",

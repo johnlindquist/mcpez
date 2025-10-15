@@ -1,4 +1,4 @@
-import { z, registerPrompt, startServer } from "../../src/index"
+import { z, registerPrompt, startServer } from "mcpez"
 
 registerPrompt(
     "review-code",
@@ -19,5 +19,5 @@ registerPrompt(
     }),
 )
 
-await startServer("code-reviewer", { version: "1.0.0" })
+await startServer("post-publish-test-prompt", { version: "1.0.0" })
 

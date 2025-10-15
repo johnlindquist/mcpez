@@ -1,5 +1,4 @@
-import { z } from "zod"
-import { registerPrompt, startServer } from "../../src/index"
+import { z, registerPrompt, startServer } from "../../src/index"
 
 registerPrompt(
   "give_advice",

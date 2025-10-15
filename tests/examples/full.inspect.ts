@@ -1,5 +1,4 @@
-import { z } from "zod"
-import { registerPrompt, registerTool, registerResource, startServer } from "../../src/index"
+import { z, registerPrompt, registerTool, registerResource, startServer } from "../../src/index"
 
 registerTool(
     "echo",
