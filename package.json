@@ -15,9 +15,10 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && bun run sync-readme",
     "dev": "bun run build --watch",
     "test": "bun test",
+    "sync-readme": "bun scripts/sync-readme.ts",
     "prepublishOnly": "bun run build",
     "lint": "biome lint .",
     "format": "biome format .",
