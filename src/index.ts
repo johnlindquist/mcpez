@@ -1,18 +1,18 @@
 import type {
-  ReadResourceCallback,
-  ReadResourceTemplateCallback,
-  ResourceMetadata,
-  ResourceTemplate as ResourceTemplateType,
+    ReadResourceCallback,
+    ReadResourceTemplateCallback,
+    ResourceMetadata,
+    ResourceTemplate as ResourceTemplateType,
 } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
 import {
-  enqueueRegistration,
-  flushRegistrations,
-  getServerInstance,
-  hasServerStarted,
-  setServerInstance,
+    enqueueRegistration,
+    flushRegistrations,
+    getServerInstance,
+    hasServerStarted,
+    setServerInstance,
 } from "./internal/state.js"
 
 // Re-export useful types to improve DX without forcing consumers to deep-import
@@ -34,101 +34,118 @@ export type ResourceReadCallback = ReadResourceCallback
 export type ResourceTemplateReadCallback = ReadResourceTemplateCallback
 
 export async function startServer(
-  name: string,
-  serverOptions?: Record<string, unknown>,
-  transport?: StdioServerTransport,
+    name: string,
+    serverOptions?: Record<string, unknown>,
+    transport?: StdioServerTransport,
 ): Promise<void> {
-  if (hasServerStarted()) {
-    throw new Error("MCP server already started. startServer must be called only once.")
-  }
+    if (hasServerStarted()) {
+        throw new Error("MCP server already started. startServer must be called only once.")
+    }
 
-  const server = new McpServer({
-    name,
-    version: (serverOptions?.version as string | undefined) ?? "1.0.0",
-    ...(serverOptions ?? {}),
-  })
+    const server = new McpServer({
+        name,
+        version: (serverOptions?.version as string | undefined) ?? "1.0.0",
+        ...(serverOptions ?? {}),
+    })
 
-  setServerInstance(server)
+    setServerInstance(server)
 
-  // Ensure any registrations done before start are attached now
-  flushRegistrations(server)
+    // Ensure any registrations done before start are attached now
+    flushRegistrations(server)
 
-  const chosenTransport = transport ?? new StdioServerTransport()
-  await server.connect(chosenTransport)
+    const chosenTransport = transport ?? new StdioServerTransport()
+    await server.connect(chosenTransport)
+
+    // Ensure the process stays alive for stdio transports, mirroring SDK behavior in Node
+    if (typeof process !== "undefined" && (process as unknown as { stdin?: unknown }).stdin) {
+        const stdin = (process as unknown as { stdin?: { resume?: () => void } }).stdin
+        stdin?.resume?.()
+    }
+
+    // Exit the process when the transport closes (e.g., inspector disconnects)
+    const t = chosenTransport as StdioServerTransport & { onclose?: () => void }
+    t.onclose = () => {
+        if (typeof process !== "undefined" && (process as unknown as { exit?: (code?: number) => never }).exit) {
+            try {
+                // eslint-disable-next-line n/no-process-exit
+                ; (process as unknown as { exit: (code?: number) => never }).exit(0)
+            } catch { }
+        }
+    }
 }
 
 export function registerPrompt(
-  name: string,
-  options: RegisterPromptOptions,
-  handler: PromptHandler,
+    name: string,
+    options: RegisterPromptOptions,
+    handler: PromptHandler,
 ): void {
-  const server = getServerInstance()
-  if (server) {
-    server.registerPrompt(name, options, handler)
-    return
-  }
-  enqueueRegistration({ kind: "prompt", name, options, handler })
+    const server = getServerInstance()
+    if (server) {
+        server.registerPrompt(name, options, handler)
+        return
+    }
+    enqueueRegistration({ kind: "prompt", name, options, handler })
 }
 
 export function registerTool(
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  name: string,
-  options: ToolOptions,
-  handler: ToolHandler,
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    name: string,
+    options: ToolOptions,
+    handler: ToolHandler,
 ): void {
-  const server = getServerInstance()
-  if (server) {
-    server.registerTool(name, options, handler)
-    return
-  }
-  enqueueRegistration({ kind: "tool", name, options, handler })
+    const server = getServerInstance()
+    if (server) {
+        server.registerTool(name, options, handler)
+        return
+    }
+    enqueueRegistration({ kind: "tool", name, options, handler })
 }
 
 export function registerResource(
-  name: string,
-  uri: string,
-  metadata: ResourceOptions,
-  readCallback: ResourceReadCallback,
+    name: string,
+    uri: string,
+    metadata: ResourceOptions,
+    readCallback: ResourceReadCallback,
 ): void
 export function registerResource(
-  name: string,
-  template: ResourceTemplateType,
-  metadata: ResourceOptions,
-  readCallback: ResourceTemplateReadCallback,
+    name: string,
+    template: ResourceTemplateType,
+    metadata: ResourceOptions,
+    readCallback: ResourceTemplateReadCallback,
 ): void
 export function registerResource(
-  name: string,
-  uriOrTemplate: string | ResourceTemplateType,
-  metadata: ResourceOptions,
-  readCallback: ResourceReadCallback | ResourceTemplateReadCallback,
+    name: string,
+    uriOrTemplate: string | ResourceTemplateType,
+    metadata: ResourceOptions,
+    readCallback: ResourceReadCallback | ResourceTemplateReadCallback,
 ): void {
-  const server = getServerInstance()
-  if (server) {
-    if (typeof uriOrTemplate === "string") {
-      server.registerResource(name, uriOrTemplate, metadata, readCallback as ReadResourceCallback)
-    } else {
-      server.registerResource(
-        name,
-        uriOrTemplate,
-        metadata,
-        readCallback as ReadResourceTemplateCallback,
-      )
+    const server = getServerInstance()
+    if (server) {
+        if (typeof uriOrTemplate === "string") {
+            server.registerResource(name, uriOrTemplate, metadata, readCallback as ReadResourceCallback)
+        } else {
+            server.registerResource(
+                name,
+                uriOrTemplate,
+                metadata,
+                readCallback as ReadResourceTemplateCallback,
+            )
+        }
+        return
     }
-    return
-  }
-  enqueueRegistration({ kind: "resource", name, uriOrTemplate, metadata, readCallback })
+    enqueueRegistration({ kind: "resource", name, uriOrTemplate, metadata, readCallback })
 }
 
 export function registerResourceTemplate(
-  name: string,
-  template: ResourceTemplateType,
-  metadata: ResourceOptions,
-  readCallback: ResourceTemplateReadCallback,
+    name: string,
+    template: ResourceTemplateType,
+    metadata: ResourceOptions,
+    readCallback: ResourceTemplateReadCallback,
 ): void {
-  const server = getServerInstance()
-  if (server) {
-    server.registerResource(name, template, metadata, readCallback)
-    return
-  }
-  enqueueRegistration({ kind: "resource", name, uriOrTemplate: template, metadata, readCallback })
+    const server = getServerInstance()
+    if (server) {
+        server.registerResource(name, template, metadata, readCallback)
+        return
+    }
+    enqueueRegistration({ kind: "resource", name, uriOrTemplate: template, metadata, readCallback })
 }
