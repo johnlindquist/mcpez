@@ -1,6 +1,6 @@
-import { z, registerPrompt, registerTool, registerResource, startServer } from "../../src/index"
+import { prompt, resource, tool, startServer, z } from "../../src/index"
 
-registerTool(
+tool(
     "echo",
     {
         description: "Echoes back the provided message",
@@ -14,7 +14,7 @@ registerTool(
     },
 )
 
-registerResource(
+resource(
     "echo",
     "echo://message",
     {
@@ -30,7 +30,7 @@ registerResource(
     }),
 )
 
-registerPrompt(
+prompt(
     "echo",
     {
         description: "Creates a prompt to process a message",

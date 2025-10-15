@@ -1,6 +1,6 @@
-import { z, registerPrompt, startServer } from "../../src/index"
+import { prompt, startServer, z } from "../../src/index"
 
-registerPrompt(
+prompt(
     "review-code",
     {
         description: "Review code for best practices and potential issues",

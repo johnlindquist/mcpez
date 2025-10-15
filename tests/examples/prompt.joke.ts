@@ -1,6 +1,6 @@
-import { z, registerPrompt, startServer } from "../../src/index"
+import { prompt, startServer, z } from "../../src/index"
 
-registerPrompt(
+prompt(
   "tell_joke",
   {
     description: "Tell a short, clean joke about a subject",

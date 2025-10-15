@@ -34,9 +34,9 @@ import { z, registerPrompt, startServer } from "mcpez"
 <!-- Source: tests/examples/prompt.poem.ts -->
 
 ```ts
-import { z, registerPrompt, startServer } from "mcpez"
+import { prompt, z } from "mcpez"
 
-registerPrompt(
+prompt(
   "review-code",
   {
     description: "Review code for best practices and potential issues",
@@ -56,8 +56,6 @@ registerPrompt(
     ],
   }),
 )
-
-await startServer()
 ```
 
 #### Tool
@@ -65,26 +63,26 @@ await startServer()
 <!-- Source: tests/examples/tool.minimal.ts -->
 
 ```ts
-import { z, registerTool, startServer } from "mcpez"
+import { tool, z } from "mcpez"
 
-registerTool(
-    "add",
-    {
-        description: "Add two numbers",
-        inputSchema: {
-            a: z.number(),
-            b: z.number(),
-        },
+tool(
+  "add",
+  {
+    description: "Add two numbers",
+    inputSchema: {
+      a: z.number(),
+      b: z.number(),
     },
-    async ({ a, b }) => {
-        const result = a + b
-        return {
-            content: [{ type: "text", text: `${a} + ${b} = ${result}` }],
-        }
-    },
+  },
+  async ({ a, b }) => {
+    const result = a + b
+    return {
+      content: [{ type: "text", text: `${a} + ${b} = ${result}` }],
+    }
+  },
 )
 
-await startServer()
+// No need to manually call startServer(); the server boots on the next tick.
 ```
 
 #### Resource
@@ -92,9 +90,9 @@ await startServer()
 <!-- Source: tests/examples/resource.minimal.ts -->
 
 ```ts
-import { registerResource, startServer } from "mcpez"
+import { resource } from "mcpez"
 
-registerResource(
+resource(
     "config",
     "config://app",
     {
@@ -110,8 +108,6 @@ registerResource(
         ],
     }),
 )
-
-await startServer()
 ```
 
 ### Fully Configured Example
@@ -119,55 +115,55 @@ await startServer()
 <!-- Source: tests/examples/full.server.ts -->
 
 ```ts
-import { z, registerPrompt, registerTool, registerResource, startServer } from "mcpez"
+import { prompt, resource, tool, startServer, z } from "mcpez"
 
-registerTool(
-    "echo",
-    {
-        description: "Echoes back the provided message",
-        inputSchema: { message: z.string() },
-    },
-    async ({ message }) => {
-        const output = { echo: `Tool echo: ${message}` }
-        return {
-            content: [{ type: "text", text: JSON.stringify(output) }],
-        }
-    },
+tool(
+  "echo",
+  {
+    description: "Echoes back the provided message",
+    inputSchema: { message: z.string() },
+  },
+  async ({ message }) => {
+    const output = { echo: `Tool echo: ${message}` }
+    return {
+      content: [{ type: "text", text: JSON.stringify(output) }],
+    }
+  },
 )
 
-registerResource(
-    "echo",
-    "echo://message",
-    {
-        description: "Echoes back messages as resources",
-    },
-    async (uri) => ({
-        contents: [
-            {
-                uri: uri.href,
-                text: `Resource echo: Hello!`,
-            },
-        ],
-    }),
+resource(
+  "echo",
+  "echo://message",
+  {
+    description: "Echoes back messages as resources",
+  },
+  async (uri) => ({
+    contents: [
+      {
+        uri: uri.href,
+        text: `Resource echo: Hello!`,
+      },
+    ],
+  }),
 )
 
-registerPrompt(
-    "echo",
-    {
-        description: "Creates a prompt to process a message",
-        argsSchema: { message: z.string() },
-    },
-    ({ message }) => ({
-        messages: [
-            {
-                role: "user",
-                content: {
-                    type: "text",
-                    text: `Please process this message: ${message}`,
-                },
-            },
-        ],
-    }),
+prompt(
+  "echo",
+  {
+    description: "Creates a prompt to process a message",
+    argsSchema: { message: z.string() },
+  },
+  ({ message }) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Please process this message: ${message}`,
+        },
+      },
+    ],
+  }),
 )
 
 // Start with custom server name and version
@@ -176,14 +172,14 @@ await startServer("example-full-server", { version: "1.0.0" })
 
 ## API
 
-- `registerPrompt(name, options, handler)`
-- `registerTool(name, options, handler)`
-- `registerResource(name, options)`
-- `registerResourceTemplate(name, options)`
+- `prompt(name, options, handler)`
+- `tool(name, options, handler)`
+- `resource(name, options)`
+- `resourceTemplate(name, options)`
 - `startServer(name, serverOptions?, transport?)`
 
 All `register*` calls can be made before `startServer`; they are queued and applied
-when the server starts. `startServer` defaults to `StdioServerTransport`.
+when the server starts. `startServer` is optional and defaults to `StdioServerTransport`.
 
 ## ESM only
 

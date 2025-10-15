@@ -1,6 +1,6 @@
-import { registerResource, startServer } from "../../src/index"
+import { resource } from "../../src/index"
 
-registerResource(
+resource(
     "config",
     "config://app",
     {
@@ -17,7 +17,4 @@ registerResource(
     }),
 )
 
-await startServer()
-
-// Immediately exit after connect to avoid hanging in tests
 process.exit(0)

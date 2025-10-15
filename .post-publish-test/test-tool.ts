@@ -1,6 +1,6 @@
-import { z, registerTool, startServer } from "mcpez"
+import { z, tool, startServer } from "mcpez"
 
-registerTool(
+tool(
     "calculate",
     {
         description: "Perform basic arithmetic operations",

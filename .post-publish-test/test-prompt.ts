@@ -1,6 +1,6 @@
-import { z, registerPrompt, startServer } from "mcpez"
+import { z, prompt, startServer } from "mcpez"
 
-registerPrompt(
+prompt(
     "review-code",
     {
         description: "Review code and provide feedback",

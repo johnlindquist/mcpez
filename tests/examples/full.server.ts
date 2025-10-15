@@ -1,52 +1,52 @@
-import { z, registerPrompt, registerTool, registerResource, startServer } from "../../src/index"
+import { prompt, resource, tool, startServer, z } from "../../src/index"
 
-registerTool(
-    "echo",
-    {
-        description: "Echoes back the provided message",
-        inputSchema: { message: z.string() },
-    },
-    async ({ message }) => {
-        const output = { echo: `Tool echo: ${message}` }
-        return {
-            content: [{ type: "text", text: JSON.stringify(output) }],
-        }
-    },
+tool(
+  "echo",
+  {
+    description: "Echoes back the provided message",
+    inputSchema: { message: z.string() },
+  },
+  async ({ message }) => {
+    const output = { echo: `Tool echo: ${message}` }
+    return {
+      content: [{ type: "text", text: JSON.stringify(output) }],
+    }
+  },
 )
 
-registerResource(
-    "echo",
-    "echo://message",
-    {
-        description: "Echoes back messages as resources",
-    },
-    async (uri) => ({
-        contents: [
-            {
-                uri: uri.href,
-                text: `Resource echo: Hello!`,
-            },
-        ],
-    }),
+resource(
+  "echo",
+  "echo://message",
+  {
+    description: "Echoes back messages as resources",
+  },
+  async (uri) => ({
+    contents: [
+      {
+        uri: uri.href,
+        text: `Resource echo: Hello!`,
+      },
+    ],
+  }),
 )
 
-registerPrompt(
-    "echo",
-    {
-        description: "Creates a prompt to process a message",
-        argsSchema: { message: z.string() },
-    },
-    ({ message }) => ({
-        messages: [
-            {
-                role: "user",
-                content: {
-                    type: "text",
-                    text: `Please process this message: ${message}`,
-                },
-            },
-        ],
-    }),
+prompt(
+  "echo",
+  {
+    description: "Creates a prompt to process a message",
+    argsSchema: { message: z.string() },
+  },
+  ({ message }) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Please process this message: ${message}`,
+        },
+      },
+    ],
+  }),
 )
 
 // Start with custom server name and version

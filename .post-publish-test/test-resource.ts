@@ -1,6 +1,6 @@
-import { registerResource, startServer } from "mcpez"
+import { resource, startServer } from "mcpez"
 
-registerResource(
+resource(
   "greeting",
   "greeting://hello",
   {

@@ -1,6 +1,6 @@
-import { z, registerPrompt, startServer } from "../../src/index"
+import { prompt, startServer, z } from "../../src/index"
 
-registerPrompt(
+prompt(
   "give_advice",
   {
     description: "Provide practical advice for a given situation",

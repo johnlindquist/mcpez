@@ -35,6 +35,7 @@ export type DeferredRegistration = DeferredPrompt | DeferredTool | DeferredResou
 
 let serverSingleton: McpServer | null = null
 const deferredRegistrations: DeferredRegistration[] = []
+let deferredRegistrationCallback: (() => void) | null = null
 
 export function assertServerNotStarted(): void {
   if (serverSingleton) {
@@ -54,19 +55,32 @@ export function getServerInstance(): McpServer | null {
   return serverSingleton
 }
 
+export function setDeferredRegistrationCallback(callback: (() => void) | null): void {
+  deferredRegistrationCallback = callback
+}
+
 export function enqueueRegistration(reg: DeferredRegistration): void {
   deferredRegistrations.push(reg)
+  deferredRegistrationCallback?.()
 }
 
 export function flushRegistrations(target: McpServer): void {
   for (const reg of deferredRegistrations) {
     switch (reg.kind) {
       case "prompt": {
-        target.registerPrompt(reg.name, reg.options as unknown as Parameters<McpServer["registerPrompt"]>[1], reg.handler)
+        target.registerPrompt(
+          reg.name,
+          reg.options as unknown as Parameters<McpServer["registerPrompt"]>[1],
+          reg.handler,
+        )
         break
       }
       case "tool":
-        target.registerTool(reg.name, reg.options as unknown as Parameters<McpServer["registerTool"]>[1], reg.handler)
+        target.registerTool(
+          reg.name,
+          reg.options as unknown as Parameters<McpServer["registerTool"]>[1],
+          reg.handler,
+        )
         break
       case "resource":
         if (typeof reg.uriOrTemplate === "string") {

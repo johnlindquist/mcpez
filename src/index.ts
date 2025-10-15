@@ -12,8 +12,42 @@ import {
     flushRegistrations,
     getServerInstance,
     hasServerStarted,
+    setDeferredRegistrationCallback,
     setServerInstance,
 } from "./internal/state.js"
+
+let autoStartTimer: ReturnType<typeof setTimeout> | null = null
+
+function cancelPendingAutoStart(): void {
+    if (autoStartTimer !== null && typeof clearTimeout === "function") {
+        clearTimeout(autoStartTimer)
+    }
+    autoStartTimer = null
+}
+
+function scheduleAutomaticStart(): void {
+    if (hasServerStarted() || autoStartTimer !== null) {
+        return
+    }
+
+    if (typeof setTimeout !== "function") {
+        return
+    }
+
+    autoStartTimer = setTimeout(() => {
+        autoStartTimer = null
+        if (!hasServerStarted()) {
+            void startServer().catch((error) => {
+                const consoleLike = globalThis.console as
+                    | { error?: (message?: unknown, ...optionalParams: unknown[]) => void }
+                    | undefined
+                consoleLike?.error?.("Failed to automatically start MCP server:", error)
+            })
+        }
+    }, 0)
+}
+
+setDeferredRegistrationCallback(scheduleAutomaticStart)
 
 // Re-export useful types to improve DX without forcing consumers to deep-import
 export type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
@@ -52,6 +86,8 @@ export async function startServer(
     serverOptions?: Record<string, unknown>,
     transport?: StdioServerTransport,
 ): Promise<void> {
+    cancelPendingAutoStart()
+
     if (hasServerStarted()) {
         throw new Error("MCP server already started. startServer must be called only once.")
     }
@@ -79,7 +115,10 @@ export async function startServer(
     // Exit the process when the transport closes (e.g., inspector disconnects)
     const t = chosenTransport as StdioServerTransport & { onclose?: () => void }
     t.onclose = () => {
-        if (typeof process !== "undefined" && (process as unknown as { exit?: (code?: number) => never }).exit) {
+        if (
+            typeof process !== "undefined" &&
+            (process as unknown as { exit?: (code?: number) => never }).exit
+        ) {
             try {
                 // eslint-disable-next-line n/no-process-exit
                 ; (process as unknown as { exit: (code?: number) => never }).exit(0)
@@ -88,7 +127,7 @@ export async function startServer(
     }
 }
 
-export function registerPrompt(
+export function prompt(
     name: string,
     options: RegisterPromptOptions,
     handler: PromptHandler,
@@ -101,7 +140,7 @@ export function registerPrompt(
     enqueueRegistration({ kind: "prompt", name, options, handler })
 }
 
-export function registerTool(
+export function tool(
     // eslint-disable-next-line @typescript-eslint/ban-types
     name: string,
     options: ToolOptions,
@@ -115,19 +154,19 @@ export function registerTool(
     enqueueRegistration({ kind: "tool", name, options, handler })
 }
 
-export function registerResource(
+export function resource(
     name: string,
     uri: string,
     metadata: ResourceOptions,
     readCallback: ResourceReadCallback,
 ): void
-export function registerResource(
+export function resource(
     name: string,
     template: ResourceTemplateType,
     metadata: ResourceOptions,
     readCallback: ResourceTemplateReadCallback,
 ): void
-export function registerResource(
+export function resource(
     name: string,
     uriOrTemplate: string | ResourceTemplateType,
     metadata: ResourceOptions,
@@ -150,7 +189,7 @@ export function registerResource(
     enqueueRegistration({ kind: "resource", name, uriOrTemplate, metadata, readCallback })
 }
 
-export function registerResourceTemplate(
+export function resourceTemplate(
     name: string,
     template: ResourceTemplateType,
     metadata: ResourceOptions,

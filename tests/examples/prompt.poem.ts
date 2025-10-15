@@ -1,6 +1,6 @@
-import { z, registerPrompt, startServer } from "../../src/index"
+import { prompt, z } from "../../src/index"
 
-registerPrompt(
+prompt(
   "review-code",
   {
     description: "Review code for best practices and potential issues",
@@ -20,8 +20,6 @@ registerPrompt(
     ],
   }),
 )
-
-await startServer()
 
 // Immediately exit after connect to avoid hanging in tests
 process.exit(0)
