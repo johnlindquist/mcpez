@@ -1,4 +1,4 @@
-import { prompt, resource, tool, startServer, z } from "../../src/index"
+import { prompt, resource, startServer, tool, z } from "../../src/index"
 
 tool(
   "echo",
