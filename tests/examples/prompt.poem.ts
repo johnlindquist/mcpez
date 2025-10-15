@@ -12,7 +12,7 @@ registerPrompt(
   }),
 )
 
-await startServer("example-server-poem", { version: "1.0.0" })
+await startServer()
 
 // Immediately exit after connect to avoid hanging in tests
 process.exit(0)

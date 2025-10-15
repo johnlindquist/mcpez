@@ -31,7 +31,7 @@ registerPrompt(
   }),
 )
 
-await startServer("example-server-poem", { version: "1.0.0" })
+await startServer()
 ```
 
 #### Tool
@@ -58,7 +58,7 @@ registerTool(
     },
 )
 
-await startServer("example-server-tool", { version: "1.0.0" })
+await startServer()
 ```
 
 #### Resource
@@ -79,7 +79,7 @@ registerResource(
     }),
 )
 
-await startServer("example-server-resource", { version: "1.0.0" })
+await startServer()
 ```
 
 ### Fully Configured Example
