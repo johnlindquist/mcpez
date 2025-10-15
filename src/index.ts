@@ -45,7 +45,7 @@ export type ResourceReadCallback = ReadResourceCallback
 export type ResourceTemplateReadCallback = ReadResourceTemplateCallback
 
 export async function startServer(
-    name: string,
+    name: string = "mcpez",
     serverOptions?: Record<string, unknown>,
     transport?: StdioServerTransport,
 ): Promise<void> {
