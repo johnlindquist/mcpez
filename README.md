@@ -2,27 +2,12 @@
 
 Minimal, ergonomic ESM wrapper for building MCP servers with TypeScript and Bun.
 
+<img src="./mcpez.png" alt="mcpez" style="max-height: 400px;" />
+
 ## Install
 
 ```bash
-# bun
 bun add mcpez
-
-# npm
-npm install mcpez
-
-# pnpm
-pnpm add mcpez
-```
-
-Zod is bundled with mcpez, so you don't need to install it separately.
-
-## Why Zod is Bundled
-
-mcpez bundles Zod v3 to ensure compatibility with the MCP SDK, which requires Zod v3 specifically. Since Zod v4 has breaking changes that cause runtime errors like `keyValidator._parse is not a function`, bundling Zod v3 prevents version conflicts and provides a simpler, error-free developer experience. You can import `z` directly from mcpez:
-
-```ts
-import { z, registerPrompt, startServer } from "mcpez"
 ```
 
 ## Quickstart
@@ -57,6 +42,12 @@ prompt(
   }),
 )
 ```
+
+> **Note**: Zod is bundled with mcpez, so you don't need to install it separately.
+
+## Why Zod is Bundled
+
+mcpez bundles Zod v3 to ensure compatibility with the MCP SDK, which requires Zod v3 specifically. Since Zod v4 has breaking changes that cause runtime errors like `keyValidator._parse is not a function`, bundling Zod v3 prevents version conflicts and provides a simpler, error-free developer experience. You can import `z` directly from mcpez:
 
 #### Tool
 
