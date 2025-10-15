@@ -22,12 +22,23 @@ export type { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdi
 // Narrowed option types, deferring to SDK types where appropriate
 // Derive exact parameter types from the SDK methods
 type RegisterPromptParams = Parameters<typeof McpServer.prototype.registerPrompt>
-export type RegisterPromptOptions = RegisterPromptParams[1]
+type SDKRegisterPromptOptions = RegisterPromptParams[1]
 export type PromptHandler = RegisterPromptParams[2]
 
+// Loosen Zod typing to support both Zod v3 and v4 without type identity issues
+export type RegisterPromptOptions = Omit<SDKRegisterPromptOptions, "argsSchema"> & {
+    argsSchema: Record<string, unknown>
+}
+
 type RegisterToolParams = Parameters<typeof McpServer.prototype.registerTool>
-export type ToolOptions = RegisterToolParams[1]
+type SDKToolOptions = RegisterToolParams[1]
 export type ToolHandler = RegisterToolParams[2]
+
+// Loosen Zod typing for tool schemas as well
+export type ToolOptions = Omit<SDKToolOptions, "inputSchema" | "outputSchema"> & {
+    inputSchema?: Record<string, unknown>
+    outputSchema?: Record<string, unknown>
+}
 
 export type ResourceOptions = ResourceMetadata
 export type ResourceReadCallback = ReadResourceCallback
@@ -81,7 +92,7 @@ export function registerPrompt(
 ): void {
     const server = getServerInstance()
     if (server) {
-        server.registerPrompt(name, options, handler)
+        server.registerPrompt(name, options as unknown as SDKRegisterPromptOptions, handler)
         return
     }
     enqueueRegistration({ kind: "prompt", name, options, handler })
@@ -95,7 +106,7 @@ export function registerTool(
 ): void {
     const server = getServerInstance()
     if (server) {
-        server.registerTool(name, options, handler)
+        server.registerTool(name, options as unknown as SDKToolOptions, handler)
         return
     }
     enqueueRegistration({ kind: "tool", name, options, handler })

@@ -62,11 +62,11 @@ export function flushRegistrations(target: McpServer): void {
   for (const reg of deferredRegistrations) {
     switch (reg.kind) {
       case "prompt": {
-        target.registerPrompt(reg.name, reg.options, reg.handler)
+        target.registerPrompt(reg.name, reg.options as unknown as Parameters<McpServer["registerPrompt"]>[1], reg.handler)
         break
       }
       case "tool":
-        target.registerTool(reg.name, reg.options, reg.handler)
+        target.registerTool(reg.name, reg.options as unknown as Parameters<McpServer["registerTool"]>[1], reg.handler)
         break
       case "resource":
         if (typeof reg.uriOrTemplate === "string") {
