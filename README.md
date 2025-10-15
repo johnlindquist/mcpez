@@ -1,17 +1,17 @@
-# ezmcp
+# mcpez
 
 Minimal, ergonomic ESM wrapper for building MCP servers with TypeScript and Bun.
 
 ## Install
 
 ```bash
-bun add ezmcp @modelcontextprotocol/sdk zod
+bun add mcpez zod
 ```
 
 ## Quickstart
 
 ```ts
-import { startServer, registerPrompt } from "ezmcp";
+import { startServer, registerPrompt } from "mcpez";
 import { z } from "zod";
 
 registerPrompt(

@@ -1,5 +1,5 @@
 {
-  "name": "ezmcp",
+  "name": "mcpez",
   "version": "0.1.0",
   "description": "Minimal, ergonomic MCP server wrapper for TypeScript/Bun",
   "type": "module",
@@ -45,10 +45,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/johnlindquist/ezmcp.git"
+    "url": "git+https://github.com/johnlindquist/mcpez.git"
   },
   "bugs": {
-    "url": "https://github.com/johnlindquist/ezmcp/issues"
+    "url": "https://github.com/johnlindquist/mcpez/issues"
   },
-  "homepage": "https://github.com/johnlindquist/ezmcp#readme"
+  "homepage": "https://github.com/johnlindquist/mcpez#readme"
 }
