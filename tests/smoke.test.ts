@@ -195,6 +195,33 @@ test("inspector can call prompts/get with args on prompt.review.ts", async () =>
   expect(stdout).toContain("console.log('hi')")
 })
 
+// Test tools/list - critical for catching Zod schema issues
+test("inspector can call tools/list on tool.gh.ts", async () => {
+  const examplePath = join(examplesDir, "tool.gh.ts")
+  const { code, stdout, stderr } = await runWithTimeout(
+    "bun",
+    [
+      "x",
+      "@modelcontextprotocol/inspector",
+      "--cli",
+      "bun",
+      examplePath,
+      "--method",
+      "tools/list",
+    ],
+    7000,
+  )
+  if (stdout) console.log(`Inspector stdout:\n${stdout}`)
+  if (stderr) console.log(`Inspector stderr:\n${stderr}`)
+  if (code !== 0) {
+    throw new Error(`inspector tools/list failed with code ${code}:\n${stderr}`)
+  }
+  expect(code).toBe(0)
+  expect(stdout).toContain("create-issue")
+  expect(stdout).toContain("title")
+  expect(stdout).toContain("body")
+})
+
 // Test tools/call with arguments
 test("inspector can call tools/call on tool.minimal.ts", async () => {
   const examplePath = join(examplesDir, "tool.minimal.ts")

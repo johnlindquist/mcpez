@@ -84,21 +84,77 @@ tool(
 import { resource } from "mcpez"
 
 resource(
-    "config",
-    "config://app",
-    {
-        description: "Application configuration data",
-        mimeType: "text/plain",
-    },
-    async (uri) => ({
-        contents: [
-            {
-                uri: uri.href,
-                text: "App configuration here",
-            },
-        ],
-    }),
+  "config",
+  "config://app",
+  {
+    description: "Application configuration data",
+    mimeType: "text/plain",
+  },
+  async (uri) => ({
+    contents: [
+      {
+        uri: uri.href,
+        text: "App configuration here",
+      },
+    ],
+  }),
 )
+```
+
+#### Logging and Notifications
+
+<!-- Source: tests/examples/logging.minimal.ts -->
+
+```ts
+import { tool, log, notifyToolListChanged, getServer } from "mcpez"
+
+// Register a simple tool
+tool(
+    "greet",
+    { description: "Greet the user" },
+    async () => {
+        // Send a log message to the client
+        log("info", "Greeting tool was called")
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: "Hello from mcpez!",
+                },
+            ],
+        }
+    },
+)
+
+// Register another tool that modifies the tool list
+tool(
+    "add_tool",
+    { description: "Simulate adding a new tool" },
+    async () => {
+        log("info", "New tool would be added here")
+
+        // Notify the client that the tool list has changed
+        notifyToolListChanged()
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: "Tool list changed!",
+                },
+            ],
+        }
+    },
+)
+
+// Example of using getServer() for advanced operations
+const server = getServer()
+if (server) {
+    log("debug", "Server is running, can access advanced APIs")
+} else {
+    log("debug", "Server not started yet, logging is queued")
+}
 ```
 
 ### Fully Configured Example
@@ -106,7 +162,7 @@ resource(
 <!-- Source: tests/examples/full.server.ts -->
 
 ```ts
-import { prompt, resource, tool, startServer, z } from "mcpez"
+import { prompt, resource, startServer, tool, z } from "mcpez"
 
 tool(
   "echo",
@@ -168,6 +224,11 @@ await startServer("example-full-server", { version: "1.0.0" })
 - `resource(name, options)`
 - `resourceTemplate(name, options)`
 - `startServer(name, serverOptions?, transport?)`
+- `getServer()` - Get the running server instance
+- `log(level, data, logger?)` - Send a logging message
+- `notifyResourceListChanged()` - Notify when resources change
+- `notifyToolListChanged()` - Notify when tools change
+- `notifyPromptListChanged()` - Notify when prompts change
 
 All `register*` calls can be made before `startServer`; they are queued and applied
 when the server starts. `startServer` is optional and defaults to `StdioServerTransport`.

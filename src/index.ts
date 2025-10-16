@@ -53,6 +53,9 @@ setDeferredRegistrationCallback(scheduleAutomaticStart)
 export type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 export type { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
+// LoggingLevel is a union of valid log severity levels per MCP specification
+export type LoggingLevel = "debug" | "info" | "notice" | "warning" | "error" | "critical" | "alert" | "emergency"
+
 // Re-export Zod so users don't need to install it separately
 export { z } from "zod"
 
@@ -121,8 +124,8 @@ export async function startServer(
     ) {
       try {
         // eslint-disable-next-line n/no-process-exit
-        ;(process as unknown as { exit: (code?: number) => never }).exit(0)
-      } catch {}
+        ; (process as unknown as { exit: (code?: number) => never }).exit(0)
+      } catch { }
     }
   }
 }
@@ -197,4 +200,68 @@ export function resourceTemplate(
     return
   }
   enqueueRegistration({ kind: "resource", name, uriOrTemplate: template, metadata, readCallback })
+}
+
+/**
+ * Returns the MCP server instance, if it has been started.
+ * Useful for advanced operations like sending notifications or accessing the underlying server.
+ * @returns The McpServer instance or null if not yet started
+ */
+export function getServer(): McpServer | null {
+  return getServerInstance()
+}
+
+/**
+ * Sends a logging message to the client.
+ * If called before the server starts, the message is queued and sent after connection.
+ * @param level - The severity level of the log message
+ * @param data - The data to log (message, object, or any JSON-serializable value)
+ * @param logger - Optional name of the logger issuing this message
+ */
+export function log(level: LoggingLevel, data: unknown, logger?: string): void {
+  const server = getServerInstance()
+  if (server) {
+    void server.sendLoggingMessage({ level, data, logger })
+    return
+  }
+  enqueueRegistration({ kind: "log", level, data, logger })
+}
+
+/**
+ * Notifies the client that the list of resources has changed.
+ * If called before the server starts, the notification is queued.
+ */
+export function notifyResourceListChanged(): void {
+  const server = getServerInstance()
+  if (server) {
+    server.sendResourceListChanged()
+    return
+  }
+  enqueueRegistration({ kind: "resourceListChanged" })
+}
+
+/**
+ * Notifies the client that the list of tools has changed.
+ * If called before the server starts, the notification is queued.
+ */
+export function notifyToolListChanged(): void {
+  const server = getServerInstance()
+  if (server) {
+    server.sendToolListChanged()
+    return
+  }
+  enqueueRegistration({ kind: "toolListChanged" })
+}
+
+/**
+ * Notifies the client that the list of prompts has changed.
+ * If called before the server starts, the notification is queued.
+ */
+export function notifyPromptListChanged(): void {
+  const server = getServerInstance()
+  if (server) {
+    server.sendPromptListChanged()
+    return
+  }
+  enqueueRegistration({ kind: "promptListChanged" })
 }

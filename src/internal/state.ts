@@ -31,7 +31,26 @@ type DeferredResource = {
   readCallback: ResourceReadCallback | ResourceTemplateReadCallback
 }
 
-export type DeferredRegistration = DeferredPrompt | DeferredTool | DeferredResource
+type DeferredLog = {
+  kind: "log"
+  level: string
+  message?: string
+  logger?: string
+  data: unknown
+}
+
+type DeferredNotification =
+  | {
+    kind: "resourceListChanged"
+  }
+  | {
+    kind: "toolListChanged"
+  }
+  | {
+    kind: "promptListChanged"
+  }
+
+export type DeferredRegistration = DeferredPrompt | DeferredTool | DeferredResource | DeferredLog | DeferredNotification
 
 let serverSingleton: McpServer | null = null
 const deferredRegistrations: DeferredRegistration[] = []
@@ -98,6 +117,23 @@ export function flushRegistrations(target: McpServer): void {
             reg.readCallback as ResourceTemplateReadCallback,
           )
         }
+        break
+      case "log": {
+        void target.sendLoggingMessage({
+          level: reg.level as Parameters<typeof target.sendLoggingMessage>[0]["level"],
+          logger: reg.logger,
+          data: reg.data,
+        })
+        break
+      }
+      case "resourceListChanged":
+        target.sendResourceListChanged()
+        break
+      case "toolListChanged":
+        target.sendToolListChanged()
+        break
+      case "promptListChanged":
+        target.sendPromptListChanged()
         break
     }
   }
