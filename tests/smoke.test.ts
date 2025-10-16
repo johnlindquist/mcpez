@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test"
+import { Client } from "@modelcontextprotocol/sdk/client/index.js"
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { spawn } from "node:child_process"
 import { readdirSync } from "node:fs"
 import { join } from "node:path"
@@ -193,6 +195,47 @@ test("inspector can call prompts/get with args on prompt.review.ts", async () =>
   expect(code).toBe(0)
   expect(stdout).toContain("Please review this code")
   expect(stdout).toContain("console.log('hi')")
+})
+
+test("logging example emits notifications when tools are called", async () => {
+  const examplePath = join(examplesDir, "logging.minimal.ts")
+  const client = new Client({ name: "mcpez-smoke", version: "1.0.0" })
+  const transport = new StdioClientTransport({
+    command: "bun",
+    args: [examplePath],
+    cwd: repoRoot,
+    stderr: "pipe",
+  })
+
+  const logs: Array<{ level: string; data: unknown }> = []
+  client.fallbackNotificationHandler = async (notification) => {
+    if (notification.method === "notifications/message") {
+      logs.push(notification.params as { level: string; data: unknown })
+    }
+  }
+
+  try {
+    await client.connect(transport)
+    await client.setLoggingLevel("debug")
+    const response = await client.callTool({ name: "greet", arguments: {} })
+    expect(response.content?.[0]?.type).toBe("text")
+    expect(response.content?.[0]?.text).toContain("Hello from mcpez!")
+
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const hasQueuedLog = logs.some(
+      (entry) => entry.level === "debug" && entry.data === "Server not started yet, logging is queued",
+    )
+    const hasToolLog = logs.some(
+      (entry) => entry.level === "info" && entry.data === "Greeting tool was called",
+    )
+
+    expect(hasQueuedLog).toBe(true)
+    expect(hasToolLog).toBe(true)
+  } finally {
+    await client.close().catch(() => {})
+    await transport.close().catch(() => {})
+  }
 })
 
 // Test tools/list - critical for catching Zod schema issues

@@ -5,6 +5,7 @@ import type {
   ResourceTemplate as ResourceTemplateType,
 } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import type { ServerOptions } from "@modelcontextprotocol/sdk/server/index.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
 import {
@@ -95,11 +96,33 @@ export async function startServer(
     throw new Error("MCP server already started. startServer must be called only once.")
   }
 
-  const server = new McpServer({
-    name,
-    version: (serverOptions?.version as string | undefined) ?? "1.0.0",
-    ...(serverOptions ?? {}),
-  })
+  const { version, capabilities, instructions, ...implementationDetails } = serverOptions ?? {}
+
+  const baseCapabilities =
+    capabilities && typeof capabilities === "object"
+      ? (capabilities as Record<string, unknown>)
+      : undefined
+
+  const normalizedCapabilities: Record<string, unknown> = {
+    ...(baseCapabilities ?? {}),
+  }
+  const loggingCapability =
+    baseCapabilities && typeof baseCapabilities["logging"] === "object" && baseCapabilities["logging"] !== null
+      ? (baseCapabilities["logging"] as Record<string, unknown>)
+      : {}
+  normalizedCapabilities.logging = loggingCapability
+
+  const server = new McpServer(
+    {
+      name,
+      version: typeof version === "string" ? version : "1.0.0",
+      ...implementationDetails,
+    },
+    {
+      capabilities: normalizedCapabilities as ServerOptions["capabilities"],
+      instructions: typeof instructions === "string" ? instructions : undefined,
+    },
+  )
 
   setServerInstance(server)
 
@@ -108,6 +131,7 @@ export async function startServer(
 
   const chosenTransport = transport ?? new StdioServerTransport()
   await server.connect(chosenTransport)
+  flushRegistrations(server)
 
   // Ensure the process stays alive for stdio transports, mirroring SDK behavior in Node
   if (typeof process !== "undefined" && (process as unknown as { stdin?: unknown }).stdin) {
@@ -211,14 +235,13 @@ export function getServer(): McpServer | null {
   return getServerInstance()
 }
 
-/**
- * Sends a logging message to the client.
- * If called before the server starts, the message is queued and sent after connection.
- * @param level - The severity level of the log message
- * @param data - The data to log (message, object, or any JSON-serializable value)
- * @param logger - Optional name of the logger issuing this message
- */
-export function log(level: LoggingLevel, data: unknown, logger?: string): void {
+type LogMethod = (data: unknown, logger?: string) => void
+
+export type LogApi = Record<LoggingLevel, LogMethod> & {
+  emit: (level: LoggingLevel, data: unknown, logger?: string) => void
+}
+
+function emitLog(level: LoggingLevel, data: unknown, logger?: string): void {
   const server = getServerInstance()
   if (server) {
     void server.sendLoggingMessage({ level, data, logger })
@@ -226,6 +249,24 @@ export function log(level: LoggingLevel, data: unknown, logger?: string): void {
   }
   enqueueRegistration({ kind: "log", level, data, logger })
 }
+
+const logObject: LogApi = {
+  emit: emitLog,
+  debug: (data, logger) => emitLog("debug", data, logger),
+  info: (data, logger) => emitLog("info", data, logger),
+  notice: (data, logger) => emitLog("notice", data, logger),
+  warning: (data, logger) => emitLog("warning", data, logger),
+  error: (data, logger) => emitLog("error", data, logger),
+  critical: (data, logger) => emitLog("critical", data, logger),
+  alert: (data, logger) => emitLog("alert", data, logger),
+  emergency: (data, logger) => emitLog("emergency", data, logger),
+}
+
+/**
+ * Logging helpers for sending MCP logging notifications.
+ * Use `log.info(data)` (or other severity helpers) for convenience, or `log.emit(level, data)` for dynamic levels.
+ */
+export const log: LogApi = Object.freeze(logObject) as LogApi
 
 /**
  * Notifies the client that the list of resources has changed.

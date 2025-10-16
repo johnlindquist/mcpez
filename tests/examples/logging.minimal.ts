@@ -6,7 +6,7 @@ tool(
     { description: "Greet the user" },
     async () => {
         // Send a log message to the client
-        log("info", "Greeting tool was called")
+        log.info("Greeting tool was called")
 
         return {
             content: [
@@ -24,7 +24,7 @@ tool(
     "add_tool",
     { description: "Simulate adding a new tool" },
     async () => {
-        log("info", "New tool would be added here")
+        log.info("New tool would be added here")
 
         // Notify the client that the tool list has changed
         notifyToolListChanged()
@@ -43,7 +43,7 @@ tool(
 // Example of using getServer() for advanced operations
 const server = getServer()
 if (server) {
-    log("debug", "Server is running, can access advanced APIs")
+    log.debug("Server is running, can access advanced APIs")
 } else {
-    log("debug", "Server not started yet, logging is queued")
+    log.debug("Server not started yet, logging is queued")
 }

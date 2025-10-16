@@ -84,7 +84,9 @@ export function enqueueRegistration(reg: DeferredRegistration): void {
 }
 
 export function flushRegistrations(target: McpServer): void {
-  for (const reg of deferredRegistrations) {
+  const remaining: DeferredRegistration[] = []
+  const queued = deferredRegistrations.splice(0)
+  for (const reg of queued) {
     switch (reg.kind) {
       case "prompt": {
         target.registerPrompt(
@@ -119,11 +121,15 @@ export function flushRegistrations(target: McpServer): void {
         }
         break
       case "log": {
-        void target.sendLoggingMessage({
-          level: reg.level as Parameters<typeof target.sendLoggingMessage>[0]["level"],
-          logger: reg.logger,
-          data: reg.data,
-        })
+        if (target.isConnected()) {
+          void target.sendLoggingMessage({
+            level: reg.level as Parameters<typeof target.sendLoggingMessage>[0]["level"],
+            logger: reg.logger,
+            data: reg.data,
+          })
+        } else {
+          remaining.push(reg)
+        }
         break
       }
       case "resourceListChanged":
@@ -137,5 +143,7 @@ export function flushRegistrations(target: McpServer): void {
         break
     }
   }
-  deferredRegistrations.length = 0
+  if (remaining.length > 0) {
+    deferredRegistrations.push(...remaining)
+  }
 }

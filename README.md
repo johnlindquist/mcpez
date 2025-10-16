@@ -114,7 +114,7 @@ tool(
     { description: "Greet the user" },
     async () => {
         // Send a log message to the client
-        log("info", "Greeting tool was called")
+        log.info("Greeting tool was called")
 
         return {
             content: [
@@ -132,7 +132,7 @@ tool(
     "add_tool",
     { description: "Simulate adding a new tool" },
     async () => {
-        log("info", "New tool would be added here")
+        log.info("New tool would be added here")
 
         // Notify the client that the tool list has changed
         notifyToolListChanged()
@@ -151,9 +151,9 @@ tool(
 // Example of using getServer() for advanced operations
 const server = getServer()
 if (server) {
-    log("debug", "Server is running, can access advanced APIs")
+    log.debug("Server is running, can access advanced APIs")
 } else {
-    log("debug", "Server not started yet, logging is queued")
+    log.debug("Server not started yet, logging is queued")
 }
 ```
 
@@ -225,7 +225,7 @@ await startServer("example-full-server", { version: "1.0.0" })
 - `resourceTemplate(name, options)`
 - `startServer(name, serverOptions?, transport?)`
 - `getServer()` - Get the running server instance
-- `log(level, data, logger?)` - Send a logging message
+- `log.info(data, logger?)` - Send a logging message (other helpers: `debug`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`)
 - `notifyResourceListChanged()` - Notify when resources change
 - `notifyToolListChanged()` - Notify when tools change
 - `notifyPromptListChanged()` - Notify when prompts change
@@ -241,4 +241,3 @@ ES module import syntax.
 ## License
 
 MIT
-
