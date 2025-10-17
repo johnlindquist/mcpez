@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
-import { Client } from "@modelcontextprotocol/sdk/client/index.js"
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { spawn } from "node:child_process"
 import { readdirSync } from "node:fs"
 import { join } from "node:path"
+import { Client } from "@modelcontextprotocol/sdk/client/index.js"
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 
 const repoRoot = new URL("..", import.meta.url).pathname
 const examplesDir = join(repoRoot, "tests", "examples")
@@ -224,7 +224,8 @@ test("logging example emits notifications when tools are called", async () => {
     await new Promise((resolve) => setTimeout(resolve, 100))
 
     const hasQueuedLog = logs.some(
-      (entry) => entry.level === "debug" && entry.data === "Server not started yet, logging is queued",
+      (entry) =>
+        entry.level === "debug" && entry.data === "Server not started yet, logging is queued",
     )
     const hasToolLog = logs.some(
       (entry) => entry.level === "info" && entry.data === "Greeting tool was called",
@@ -243,15 +244,7 @@ test("inspector can call tools/list on tool.gh.ts", async () => {
   const examplePath = join(examplesDir, "tool.gh.ts")
   const { code, stdout, stderr } = await runWithTimeout(
     "bun",
-    [
-      "x",
-      "@modelcontextprotocol/inspector",
-      "--cli",
-      "bun",
-      examplePath,
-      "--method",
-      "tools/list",
-    ],
+    ["x", "@modelcontextprotocol/inspector", "--cli", "bun", examplePath, "--method", "tools/list"],
     7000,
   )
   if (stdout) console.log(`Inspector stdout:\n${stdout}`)

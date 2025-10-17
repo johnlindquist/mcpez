@@ -41,16 +41,21 @@ type DeferredLog = {
 
 type DeferredNotification =
   | {
-    kind: "resourceListChanged"
-  }
+      kind: "resourceListChanged"
+    }
   | {
-    kind: "toolListChanged"
-  }
+      kind: "toolListChanged"
+    }
   | {
-    kind: "promptListChanged"
-  }
+      kind: "promptListChanged"
+    }
 
-export type DeferredRegistration = DeferredPrompt | DeferredTool | DeferredResource | DeferredLog | DeferredNotification
+export type DeferredRegistration =
+  | DeferredPrompt
+  | DeferredTool
+  | DeferredResource
+  | DeferredLog
+  | DeferredNotification
 
 let serverSingleton: McpServer | null = null
 const deferredRegistrations: DeferredRegistration[] = []

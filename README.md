@@ -83,21 +83,291 @@ tool(
 ```ts
 import { resource } from "mcpez"
 
+type EnvironmentConfig = {
+  settings: {
+    databaseUrl: string
+    featureFlags: Record<string, boolean>
+  }
+  secrets: {
+    apiKey: string
+  }
+}
+
+// In-memory configuration data keyed by deployment environment.
+const environmentConfigs = new Map<string, EnvironmentConfig>([
+  [
+    "production",
+    {
+      settings: {
+        databaseUrl: "postgresql://prod.db.internal/app",
+        featureFlags: {
+          betaDashboard: false,
+          useV2Search: true,
+        },
+      },
+      secrets: {
+        apiKey: "prod-12345",
+      },
+    },
+  ],
+  [
+    "staging",
+    {
+      settings: {
+        databaseUrl: "postgresql://staging.db.internal/app",
+        featureFlags: {
+          betaDashboard: true,
+          useV2Search: true,
+        },
+      },
+      secrets: {
+        apiKey: "staging-67890",
+      },
+    },
+  ],
+  [
+    "development",
+    {
+      settings: {
+        databaseUrl: "postgresql://localhost:5432/app",
+        featureFlags: {
+          betaDashboard: true,
+          useV2Search: false,
+        },
+      },
+      secrets: {
+        apiKey: "dev-abcde",
+      },
+    },
+  ],
+])
+
 resource(
-  "config",
-  "config://app",
+  "environment-config",
+  "config://environment",
   {
-    description: "Application configuration data",
-    mimeType: "text/plain",
+    description: "Environment-specific configuration values with optional secrets.",
+    mimeType: "application/json",
   },
-  async (uri) => ({
-    contents: [
+  async (uri) => {
+    const params = uri.searchParams
+    const environment = params.get("env") ?? "production"
+
+    const config = environmentConfigs.get(environment)
+    if (!config) {
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                error: `Unknown environment: ${environment}`,
+                availableEnvironments: Array.from(environmentConfigs.keys()),
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      }
+    }
+
+    const includeSecrets = params.get("secrets") === "true"
+
+    const payload = {
+      environment,
+      settings: config.settings,
+      ...(includeSecrets ? { secrets: config.secrets } : {}),
+      generatedAt: new Date().toISOString(),
+    }
+
+    return {
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: "application/json",
+          text: JSON.stringify(payload, null, 2),
+        },
+      ],
+    }
+  },
+)
+```
+
+#### Resource Template
+
+<!-- Source: tests/examples/resourceTemplate.logs.ts -->
+
+```ts
+import { resourceTemplate } from "mcpez"
+
+type LogLevel = "info" | "warning" | "error"
+type LogEntry = {
+  timestamp: string
+  message: string
+  context?: Record<string, unknown>
+}
+
+// Structured audit logs keyed by ISO date and severity level.
+const auditLogStore: Record<string, Record<LogLevel, LogEntry[]>> = {
+  "2024-04-01": {
+    info: [
+      { timestamp: "2024-04-01T08:00:00Z", message: "Deployment pipeline triggered" },
+      { timestamp: "2024-04-01T08:05:12Z", message: "Deployment completed successfully" },
+    ],
+    warning: [
       {
-        uri: uri.href,
-        text: "App configuration here",
+        timestamp: "2024-04-01T09:12:33Z",
+        message: "Retrying connection to Redis leader",
+        context: { attempts: 2 },
       },
     ],
-  }),
+    error: [
+      {
+        timestamp: "2024-04-01T09:15:00Z",
+        message: "Payment gateway timeout",
+        context: { orderId: "ORD-481516" },
+      },
+    ],
+  },
+  "2024-04-02": {
+    info: [
+      { timestamp: "2024-04-02T07:45:00Z", message: "Background sync completed" },
+      { timestamp: "2024-04-02T10:30:00Z", message: "New feature flag enabled" },
+    ],
+    warning: [
+      {
+        timestamp: "2024-04-02T11:05:48Z",
+        message: "Slow database query detected",
+        context: { durationMs: 830, query: "SELECT * FROM invoices" },
+      },
+    ],
+    error: [],
+  },
+}
+
+const strictLevels: LogLevel[] = ["info", "warning", "error"]
+
+const firstValue = (value: string | string[] | undefined): string | undefined =>
+  Array.isArray(value) ? value[0] : value
+
+resourceTemplate(
+  "audit-log",
+  {
+    name: "audit-log",
+    title: "Audit log by date and level",
+    uriTemplate: "audit-log://{date}/{level}",
+    description: "Retrieve stored audit log entries filtered by ISO date and severity level.",
+  },
+  {
+    description: "Audit log entries grouped by date and severity level.",
+    mimeType: "application/json",
+  },
+  async (uri, variables) => {
+    const typedVariables = variables as Record<string, string | string[] | undefined>
+    const date = firstValue(typedVariables.date)
+    const level = firstValue(typedVariables.level)
+
+    if (!date || !level) {
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                error: "Both {date} and {level} must be provided in the URI template.",
+                expectedUri: "audit-log://2024-04-01/error",
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      }
+    }
+
+    const normalizedLevel = level.toLowerCase()
+    if (!strictLevels.includes(normalizedLevel as LogLevel)) {
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                error: `Unsupported log level: ${level}`,
+                supportedLevels: strictLevels,
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      }
+    }
+
+    const entriesByLevel = auditLogStore[date]
+    if (!entriesByLevel) {
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                error: `No logs found for ${date}.`,
+                availableDates: Object.keys(auditLogStore),
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      }
+    }
+
+    const entries = entriesByLevel[normalizedLevel as LogLevel]
+
+    if (!entries || entries.length === 0) {
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                message: `No ${normalizedLevel} logs found for ${date}.`,
+                availableLevels: strictLevels.filter((item) => entriesByLevel[item].length > 0),
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      }
+    }
+
+    return {
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: "application/json",
+          text: JSON.stringify(
+            {
+              date,
+              level: normalizedLevel,
+              count: entries.length,
+              entries,
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    }
+  },
 )
 ```
 
@@ -106,54 +376,46 @@ resource(
 <!-- Source: tests/examples/logging.minimal.ts -->
 
 ```ts
-import { tool, log, notifyToolListChanged, getServer } from "mcpez"
+import { getServer, log, notifyToolListChanged, tool } from "mcpez"
 
 // Register a simple tool
-tool(
-    "greet",
-    { description: "Greet the user" },
-    async () => {
-        // Send a log message to the client
-        log.info("Greeting tool was called")
+tool("greet", { description: "Greet the user" }, async () => {
+  // Send a log message to the client
+  log.info("Greeting tool was called")
 
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: "Hello from mcpez!",
-                },
-            ],
-        }
-    },
-)
+  return {
+    content: [
+      {
+        type: "text",
+        text: "Hello from mcpez!",
+      },
+    ],
+  }
+})
 
 // Register another tool that modifies the tool list
-tool(
-    "add_tool",
-    { description: "Simulate adding a new tool" },
-    async () => {
-        log.info("New tool would be added here")
+tool("add_tool", { description: "Simulate adding a new tool" }, async () => {
+  log.info("New tool would be added here")
 
-        // Notify the client that the tool list has changed
-        notifyToolListChanged()
+  // Notify the client that the tool list has changed
+  notifyToolListChanged()
 
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: "Tool list changed!",
-                },
-            ],
-        }
-    },
-)
+  return {
+    content: [
+      {
+        type: "text",
+        text: "Tool list changed!",
+      },
+    ],
+  }
+})
 
 // Example of using getServer() for advanced operations
 const server = getServer()
 if (server) {
-    log.debug("Server is running, can access advanced APIs")
+  log.debug("Server is running, can access advanced APIs")
 } else {
-    log.debug("Server not started yet, logging is queued")
+  log.debug("Server not started yet, logging is queued")
 }
 ```
 

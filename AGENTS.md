@@ -180,7 +180,7 @@ The type system intentionally **loosens** Zod schema types to avoid version conf
 
 ```typescript
 export type RegisterPromptOptions = Omit<SDKRegisterPromptOptions, "argsSchema"> & {
-  argsSchema: Record<string, unknown> | unknown
+  argsSchema?: Record<string, unknown> | unknown
 }
 ```
 
@@ -364,4 +364,3 @@ bun run check-zod-version  # Verify Zod v3
 - ✅ Run `bun run fix` before commits
 - ❌ Never upgrade to Zod v4
 - ❌ Never remove resolutions/overrides from package.json
-

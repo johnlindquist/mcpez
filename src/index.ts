@@ -1,3 +1,4 @@
+import type { ServerOptions } from "@modelcontextprotocol/sdk/server/index.js"
 import type {
   ReadResourceCallback,
   ReadResourceTemplateCallback,
@@ -5,7 +6,6 @@ import type {
   ResourceTemplate as ResourceTemplateType,
 } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
-import type { ServerOptions } from "@modelcontextprotocol/sdk/server/index.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
 import {
@@ -55,7 +55,15 @@ export type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 export type { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
 // LoggingLevel is a union of valid log severity levels per MCP specification
-export type LoggingLevel = "debug" | "info" | "notice" | "warning" | "error" | "critical" | "alert" | "emergency"
+export type LoggingLevel =
+  | "debug"
+  | "info"
+  | "notice"
+  | "warning"
+  | "error"
+  | "critical"
+  | "alert"
+  | "emergency"
 
 // Re-export Zod so users don't need to install it separately
 export { z } from "zod"
@@ -68,7 +76,7 @@ export type PromptHandler = RegisterPromptParams[2]
 
 // Loosen Zod typing to support both Zod v3 and v4 without type identity issues
 export type RegisterPromptOptions = Omit<SDKRegisterPromptOptions, "argsSchema"> & {
-  argsSchema: Record<string, unknown> | unknown
+  argsSchema?: Record<string, unknown> | unknown
 }
 
 type RegisterToolParams = Parameters<typeof McpServer.prototype.registerTool>
@@ -107,8 +115,10 @@ export async function startServer(
     ...(baseCapabilities ?? {}),
   }
   const loggingCapability =
-    baseCapabilities && typeof baseCapabilities["logging"] === "object" && baseCapabilities["logging"] !== null
-      ? (baseCapabilities["logging"] as Record<string, unknown>)
+    baseCapabilities &&
+      typeof baseCapabilities.logging === "object" &&
+      baseCapabilities.logging !== null
+      ? (baseCapabilities.logging as Record<string, unknown>)
       : {}
   normalizedCapabilities.logging = loggingCapability
 
